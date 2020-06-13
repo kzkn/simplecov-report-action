@@ -3731,6 +3731,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const report_1 = __webpack_require__(684);
+const coverage_1 = __webpack_require__(757);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -3738,13 +3739,17 @@ function run() {
             core.debug(`failedThreshold ${failedThreshold}`);
             const resultPath = core.getInput('resultPath');
             core.debug(`resultPath ${resultPath}`);
+            const resultsetPath = core.getInput('resultsetPath');
+            core.debug(`resultsetPath ${resultsetPath}`);
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-require-imports
-            const json = require(path_1.default.resolve(process.env.GITHUB_WORKSPACE, resultPath));
-            const coveredPercent = json.result.covered_percent;
+            const result = require(path_1.default.resolve(process.env.GITHUB_WORKSPACE, resultPath));
+            const coveredPercent = result.result.covered_percent;
             if (coveredPercent < failedThreshold) {
                 throw new Error(`Coverage is less than ${failedThreshold}%. (${coveredPercent}%)`);
             }
-            yield report_1.report(coveredPercent, failedThreshold);
+            const resultset = JSON.parse(path_1.default.resolve(process.env.GITHUB_WORKSPACE, resultsetPath));
+            const coverage = new coverage_1.Coverage(resultset);
+            yield report_1.report(coveredPercent, failedThreshold, coverage);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -10708,11 +10713,15 @@ const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
 const actions_replace_comment_1 = __importDefault(__webpack_require__(395));
 const markdown_table_1 = __importDefault(__webpack_require__(366));
-function report(coveredPercent, failedThreshold) {
+function report(coveredPercent, failedThreshold, coverage) {
     return __awaiter(this, void 0, void 0, function* () {
         const summaryTable = markdown_table_1.default([
             ['Covered', 'Threshold'],
-            [`${coveredPercent}%`, `${failedThreshold}%`]
+            [`${coveredPercent}%`, `${failedThreshold}%!!`]
+        ]);
+        const coverageTable = markdown_table_1.default([
+            ['Filename', 'Lines', 'Branches'],
+            ...coverage.report().map(cov => [cov.filename, String(cov.lines), String(cov.branches)])
         ]);
         const pullRequestId = github.context.issue.number;
         if (!pullRequestId) {
@@ -10726,6 +10735,7 @@ function report(coveredPercent, failedThreshold) {
             issue_number: pullRequestId,
             body: `## Simplecov Report
 ${summaryTable}
+${coverageTable}
 `
         });
     });
@@ -11034,6 +11044,67 @@ const request = withDefaults(endpoint.endpoint, {
 
 exports.request = request;
 //# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 757:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function floor(n, digits = 0) {
+    const d = Math.pow(10, digits);
+    const x = Math.floor(n * d);
+    return x / d;
+}
+function linesCoverage(coverage) {
+    const effectiveLines = coverage.filter(hit => hit !== null);
+    const rows = effectiveLines.length;
+    if (rows === 0) {
+        return 100;
+    }
+    const covered = effectiveLines.filter(hit => hit > 0).length;
+    return floor(covered / rows * 100, 2);
+}
+function branchesCoverages(coverage) {
+    const conditions = Object.keys(coverage);
+    if (conditions.length === 0) {
+        return 100;
+    }
+    let total = 0;
+    let covered = 0;
+    conditions.forEach((k) => {
+        const cond = coverage[k];
+        Object.keys(cond).forEach((branch) => {
+            total += 1;
+            const hit = cond[branch];
+            if (hit > 0) {
+                covered += 1;
+            }
+        });
+    });
+    return floor(covered / total * 100, 2);
+}
+class Coverage {
+    constructor(resultset) {
+        const coverages = resultset['RSpec']['coverage'];
+        this.files = [];
+        Object.keys(coverages).forEach((filename) => {
+            const coverage = coverages[filename];
+            this.files.push({
+                filename,
+                lines: linesCoverage(coverage.lines),
+                branches: branchesCoverages(coverage.branches),
+            });
+        });
+    }
+    report() {
+        return this.files;
+    }
+}
+exports.Coverage = Coverage;
 
 
 /***/ }),

@@ -11,7 +11,7 @@ export async function report(coveredPercent: number, failedThreshold: number, co
   ])
   const coverageTable = markdownTable([
     ['Filename', 'Lines', 'Branches'],
-    ...coverage.report().map(cov => [cov.filename, cov.lines, cov.branches])
+    ...coverage.report().map(cov => [cov.filename, String(cov.lines), String(cov.branches)])
   ])
 
   const pullRequestId = github.context.issue.number
