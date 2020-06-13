@@ -7,7 +7,7 @@ import {Coverage} from './coverage'
 export async function report(coveredPercent: number, failedThreshold: number, coverage: Coverage): Promise<void> {
   const summaryTable = markdownTable([
     ['Covered', 'Threshold'],
-    [`${coveredPercent}%`, `${failedThreshold}%`]
+    [`${coveredPercent}%`, `${failedThreshold}%!!`]
   ])
   const coverageTable = markdownTable([
     ['Filename', 'Lines', 'Branches'],
