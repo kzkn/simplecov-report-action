@@ -22,6 +22,12 @@ type FileCoverage = {
   branches: number,
 }
 
+function floor(n, digits = 0) {
+  const d = Math.pow(10, digits)
+  const x = Math.floor(n * d)
+  return x / d
+}
+
 function linesCoverage(coverage: LineCoverage): number {
   const effectiveLines = coverage.filter(hit => hit !== null)
   const rows = effectiveLines.length
@@ -30,11 +36,28 @@ function linesCoverage(coverage: LineCoverage): number {
   }
 
   const covered = effectiveLines.filter(hit => hit > 0).length
-  return covered / rows * 100
+  return floor(covered / rows * 100, 2)
 }
 
 function branchesCoverages(coverage: BranchCoverage): number {
-  return 0 // TODO
+  const conditions = Object.keys(coverage)
+  if (conditions.length === 0) {
+    return 100
+  }
+
+  let total = 0
+  let covered = 0
+  conditions.forEach((k) => {
+    const cond = coverage[k]
+    Object.keys(cond).forEach((branch) => {
+      total += 1
+      const hit = cond[branch]
+      if (hit > 0) {
+        covered += 1
+      }
+    })
+  })
+  return floor(covered / total * 100, 2)
 }
 
 export class Coverage {
