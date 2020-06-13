@@ -2,11 +2,16 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import replaceComment from '@aki77/actions-replace-comment'
 import markdownTable from 'markdown-table'
+import {Coverage} from './coverage'
 
-export async function report(coveredPercent: number, failedThreshold: number): Promise<void> {
+export async function report(coveredPercent: number, failedThreshold: number, coverage: Coverage): Promise<void> {
   const summaryTable = markdownTable([
     ['Covered', 'Threshold'],
     [`${coveredPercent}%`, `${failedThreshold}%`]
+  ])
+  const coverageTable = markdownTable([
+    ['Filename', 'Lines', 'Branches'],
+    ...coverage.report().map(cov => [cov.filename, cov.lines, cov.branches])
   ])
 
   const pullRequestId = github.context.issue.number
@@ -22,6 +27,7 @@ export async function report(coveredPercent: number, failedThreshold: number): P
     issue_number: pullRequestId,
     body: `## Simplecov Report
 ${summaryTable}
+${coverageTable}
 `
   })
 }

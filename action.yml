@@ -13,6 +13,10 @@ inputs:
     description: "json path"
     default: "coverage/.last_run.json"
     required: false
+  resultsetPath:
+    description: "resultset json path"
+    default: "coverage/.resultset.json"
+    required: false
   token:
     description: "Github token"
     required: true
