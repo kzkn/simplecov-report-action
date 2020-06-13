@@ -12,8 +12,8 @@ type RawCoverage = {
 }
 type LineCoverage = (number | null)[]
 type BranchCoverage = {
-  [branchTopName: string]: {
-    [branchName: string]: number
+  [condition: string]: {
+    [branch: string]: number
   }
 }
 type FileCoverage = {
