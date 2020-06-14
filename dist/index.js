@@ -3752,6 +3752,7 @@ function run() {
             core.debug(`resultsetJsonContent ${resultsetJsonContent}`);
             const resultset = JSON.parse(resultsetJsonContent.toString());
             const coverage = new coverage_1.Coverage(resultset);
+            coverage.trimWorkspacePath(process.env.GITHUB_WORKSPACE);
             yield report_1.report(coveredPercent, failedThreshold, coverage);
         }
         catch (error) {
@@ -10720,7 +10721,7 @@ function report(coveredPercent, failedThreshold, coverage) {
     return __awaiter(this, void 0, void 0, function* () {
         const summaryTable = markdown_table_1.default([
             ['Covered', 'Threshold'],
-            [`${coveredPercent}%`, `${failedThreshold}%!!`]
+            [`${coveredPercent}%`, `${failedThreshold}%`]
         ]);
         const coverageTable = markdown_table_1.default([
             ['Filename', 'Lines', 'Branches'],
@@ -10738,6 +10739,7 @@ function report(coveredPercent, failedThreshold, coverage) {
             issue_number: pullRequestId,
             body: `## Simplecov Report
 ${summaryTable}
+
 ${coverageTable}
 `
         });
@@ -11101,6 +11103,13 @@ class Coverage {
                 lines: linesCoverage(coverage.lines),
                 branches: branchesCoverages(coverage.branches)
             });
+        });
+    }
+    trimWorkspacePath(workspacePath) {
+        this.files.forEach((fileCov) => {
+            if (fileCov.filename.startsWith(workspacePath)) {
+                fileCov.filename = fileCov.filename.slice(workspacePath.length);
+            }
         });
     }
     report() {
