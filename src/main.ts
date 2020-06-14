@@ -33,6 +33,7 @@ async function run(): Promise<void> {
     core.debug(`resultsetJsonContent ${resultsetJsonContent}`)
     const resultset = JSON.parse(resultsetJsonContent.toString()) as Resultset
     const coverage = new Coverage(resultset)
+    coverage.trimWorkspacePath(process.env.GITHUB_WORKSPACE!)
 
     await report(coveredPercent, failedThreshold, coverage)
   } catch (error) {

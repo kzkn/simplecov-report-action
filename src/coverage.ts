@@ -76,6 +76,14 @@ export class Coverage {
     })
   }
 
+  trimWorkspacePath(workspacePath: string) {
+    this.files.forEach((fileCov) => {
+      if (fileCov.filename.startsWith(workspacePath)) {
+        fileCov.filename = fileCov.filename.slice(workspacePath.length)
+      }
+    })
+  }
+
   report(): FileCoverage[] {
     return this.files
   }
