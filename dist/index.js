@@ -3729,6 +3729,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(__webpack_require__(622));
+const fs = __importStar(__webpack_require__(747));
 const core = __importStar(__webpack_require__(470));
 const report_1 = __webpack_require__(684);
 const coverage_1 = __webpack_require__(757);
@@ -3747,7 +3748,9 @@ function run() {
             if (coveredPercent < failedThreshold) {
                 throw new Error(`Coverage is less than ${failedThreshold}%. (${coveredPercent}%)`);
             }
-            const resultset = JSON.parse(path_1.default.resolve(process.env.GITHUB_WORKSPACE, resultsetPath));
+            const resultsetJsonContent = fs.readFileSync(path_1.default.resolve(process.env.GITHUB_WORKSPACE, resultsetPath));
+            core.debug(`resultsetJsonContent ${resultsetJsonContent}`);
+            const resultset = JSON.parse(resultsetJsonContent.toString());
             const coverage = new coverage_1.Coverage(resultset);
             yield report_1.report(coveredPercent, failedThreshold, coverage);
         }
@@ -11066,7 +11069,7 @@ function linesCoverage(coverage) {
         return 100;
     }
     const covered = effectiveLines.filter(hit => hit > 0).length;
-    return floor(covered / rows * 100, 2);
+    return floor((covered / rows) * 100, 2);
 }
 function branchesCoverages(coverage) {
     const conditions = Object.keys(coverage);
@@ -11075,9 +11078,9 @@ function branchesCoverages(coverage) {
     }
     let total = 0;
     let covered = 0;
-    conditions.forEach((k) => {
+    conditions.forEach(k => {
         const cond = coverage[k];
-        Object.keys(cond).forEach((branch) => {
+        Object.keys(cond).forEach(branch => {
             total += 1;
             const hit = cond[branch];
             if (hit > 0) {
@@ -11085,18 +11088,18 @@ function branchesCoverages(coverage) {
             }
         });
     });
-    return floor(covered / total * 100, 2);
+    return floor((covered / total) * 100, 2);
 }
 class Coverage {
     constructor(resultset) {
         const coverages = resultset['RSpec']['coverage'];
         this.files = [];
-        Object.keys(coverages).forEach((filename) => {
+        Object.keys(coverages).forEach(filename => {
             const coverage = coverages[filename];
             this.files.push({
                 filename,
                 lines: linesCoverage(coverage.lines),
-                branches: branchesCoverages(coverage.branches),
+                branches: branchesCoverages(coverage.branches)
             });
         });
     }

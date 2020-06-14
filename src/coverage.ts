@@ -1,4 +1,4 @@
-type Resultset = {
+export type Resultset = {
   [command: string]: {
     coverage: RawCoverages
   }

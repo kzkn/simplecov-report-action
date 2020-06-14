@@ -1,7 +1,8 @@
 import path from 'path'
+import * as fs from 'fs'
 import * as core from '@actions/core'
 import {report} from './report'
-import {Coverage} from './coverage'
+import {Coverage, Resultset} from './coverage'
 
 interface Result {
   result: {
@@ -28,7 +29,9 @@ async function run(): Promise<void> {
       throw new Error(`Coverage is less than ${failedThreshold}%. (${coveredPercent}%)`)
     }
 
-    const resultset = JSON.parse(path.resolve(process.env.GITHUB_WORKSPACE!, resultsetPath)) as {}
+    const resultsetJsonContent = fs.readFileSync(path.resolve(process.env.GITHUB_WORKSPACE!, resultsetPath))
+    core.debug(`resultsetJsonContent ${resultsetJsonContent}`)
+    const resultset = JSON.parse(resultsetJsonContent.toString()) as Resultset
     const coverage = new Coverage(resultset)
 
     await report(coveredPercent, failedThreshold, coverage)
